@@ -1,0 +1,1771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PropScribe — AI Listing Generator for Nigerian Agents</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ink:       #111714;
+  --ink2:      #1a2320;
+  --ink3:      #232f2b;
+  --sage:      #3d6b52;
+  --leaf:      #4e8c68;
+  --mint:      #7ec8a0;
+  --lime:      #b5e853;
+  --paper:     #f6f3ee;
+  --paper2:    #ede9e1;
+  --white:     #ffffff;
+  --td:        #111714;
+  --tl:        #f6f3ee;
+  --muted:     rgba(17,23,20,0.42);
+  --muted-l:   rgba(246,243,238,0.45);
+  --border:    rgba(17,23,20,0.09);
+  --border-l:  rgba(246,243,238,0.1);
+  --r:         12px;
+  --r-lg:      18px;
+  --serif:     "Instrument Serif", Georgia, serif;
+  --sans:      "Outfit", sans-serif;
+  --mono:      "JetBrains Mono", monospace;
+  --shadow:    0 1px 12px rgba(17,23,20,0.07);
+  --shadow-md: 0 4px 24px rgba(17,23,20,0.1);
+  --shadow-lg: 0 8px 48px rgba(17,23,20,0.15);
+}
+
+html { scroll-behavior: smooth; }
+body { font-family: var(--sans); background: var(--paper); color: var(--td); line-height: 1.6; overflow-x: hidden; }
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(78,140,104,0.3); border-radius: 99px; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   SCREEN SYSTEM
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.screen { display: none; }
+.screen.active { display: block; }
+#authScreen.active { display: grid; grid-template-columns: 1fr 1fr; min-height: 100vh; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   SVG ICON SYSTEM
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.icon { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.icon svg { display: block; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   AUTH LEFT — BRAND PANEL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.auth-left {
+  background: var(--ink);
+  padding: 52px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle grid texture */
+.auth-left::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(78,140,104,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(78,140,104,0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+}
+
+/* Green glow orb */
+.auth-left::after {
+  content: '';
+  position: absolute;
+  width: 480px; height: 480px;
+  background: radial-gradient(circle, rgba(78,140,104,0.18), transparent 65%);
+  top: -120px; right: -120px;
+  pointer-events: none;
+}
+
+.auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+/* PROPSCRIBE LOGO — custom SVG house-with-pen mark */
+.logo-mark {
+  width: 42px; height: 42px;
+  background: var(--leaf);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.logo-wordmark {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+}
+
+.logo-name {
+  font-family: var(--serif);
+  font-size: 19px;
+  font-weight: 400;
+  color: var(--tl);
+  letter-spacing: -0.01em;
+}
+
+.logo-sub {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mint);
+  margin-top: 1px;
+}
+
+.auth-hero { position: relative; z-index: 1; }
+
+.auth-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px;
+  background: rgba(78,140,104,0.18);
+  border: 1px solid rgba(126,200,160,0.22);
+  border-radius: 99px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mint);
+  margin-bottom: 22px;
+}
+
+.auth-eyebrow-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--lime);
+  box-shadow: 0 0 6px var(--lime);
+}
+
+.auth-hero h1 {
+  font-family: var(--serif);
+  font-size: clamp(30px, 3vw, 48px);
+  font-weight: 400;
+  color: var(--tl);
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  margin-bottom: 16px;
+}
+
+.auth-hero h1 em {
+  font-style: italic;
+  color: var(--lime);
+}
+
+.auth-hero p {
+  font-size: 14.5px;
+  color: var(--muted-l);
+  max-width: 360px;
+  line-height: 1.75;
+}
+
+/* Feature pills */
+.auth-features {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+  z-index: 1;
+}
+
+.auth-feature {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(246,243,238,0.04);
+  border: 1px solid var(--border-l);
+  border-radius: 10px;
+}
+
+.auth-feature-icon {
+  width: 30px; height: 30px;
+  background: rgba(78,140,104,0.2);
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+.auth-feature-text strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--tl);
+  line-height: 1.2;
+}
+
+.auth-feature-text span {
+  font-size: 11px;
+  color: var(--muted-l);
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   AUTH RIGHT — FORM PANEL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.auth-right {
+  background: var(--paper);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 52px 48px;
+}
+
+.auth-form-wrap { width: 100%; max-width: 400px; }
+
+.auth-form-wrap h2 {
+  font-family: var(--serif);
+  font-size: 28px;
+  font-weight: 400;
+  color: var(--td);
+  margin-bottom: 6px;
+  letter-spacing: -0.02em;
+}
+
+.auth-form-wrap p.sub {
+  font-size: 13.5px;
+  color: var(--muted);
+  margin-bottom: 28px;
+}
+
+/* Tabs */
+.auth-tabs {
+  display: flex;
+  background: var(--paper2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 3px;
+  margin-bottom: 24px;
+  gap: 3px;
+}
+
+.auth-tab {
+  flex: 1; padding: 9px;
+  background: transparent; border: none;
+  border-radius: 8px;
+  font-family: var(--sans);
+  font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all 0.18s;
+  color: var(--muted);
+}
+
+.auth-tab.active {
+  background: var(--white);
+  color: var(--td);
+  box-shadow: 0 1px 4px rgba(17,23,20,0.08);
+}
+
+/* Forms */
+.auth-form { display: flex; flex-direction: column; gap: 14px; }
+.auth-form.hidden { display: none; }
+.fg { display: flex; flex-direction: column; gap: 5px; }
+.fl { font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
+.fi {
+  padding: 11px 14px;
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: 9px;
+  font-family: var(--sans);
+  font-size: 14px;
+  color: var(--td);
+  outline: none;
+  transition: all 0.2s;
+  width: 100%;
+}
+.fi:focus { border-color: var(--leaf); box-shadow: 0 0 0 3px rgba(78,140,104,0.1); }
+.fi::placeholder { color: rgba(17,23,20,0.28); }
+
+.btn-auth {
+  padding: 13px;
+  background: var(--ink);
+  color: var(--tl);
+  border: none; border-radius: 10px;
+  font-family: var(--sans); font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  letter-spacing: 0.01em;
+}
+.btn-auth:hover { background: var(--ink2); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+.btn-auth:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+.aerr {
+  padding: 10px 14px;
+  background: rgba(220,38,38,0.06);
+  border: 1px solid rgba(220,38,38,0.2);
+  border-radius: 8px;
+  font-size: 13px; color: #dc2626;
+  display: none;
+}
+
+/* Plans mini */
+.auth-plans-title {
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--muted); text-align: center;
+  margin: 22px 0 12px;
+}
+
+.auth-plans {
+  display: grid; grid-template-columns: repeat(2,1fr);
+  gap: 8px;
+}
+
+.aplan {
+  padding: 12px;
+  background: var(--paper2);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  text-align: center;
+  transition: all 0.15s;
+}
+.aplan:hover { border-color: var(--leaf); background: rgba(78,140,104,0.04); }
+.aplan.hot { border-color: var(--leaf); background: rgba(78,140,104,0.05); }
+.aplan-name { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 3px; }
+.aplan.hot .aplan-name { color: var(--leaf); }
+.aplan-price { font-family: var(--serif); font-size: 18px; color: var(--td); line-height: 1; }
+.aplan-lim { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   APP NAVIGATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.app-nav {
+  background: var(--ink);
+  height: 60px;
+  display: flex; align-items: center;
+  padding: 0 40px;
+  justify-content: space-between;
+  position: sticky; top: 0; z-index: 100;
+  border-bottom: 1px solid var(--border-l);
+}
+
+.nav-brand { display: flex; align-items: center; gap: 10px; }
+
+.nav-logo-mark {
+  width: 32px; height: 32px;
+  background: var(--leaf);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.nav-logo-name {
+  font-family: var(--serif);
+  font-size: 17px; font-weight: 400;
+  color: var(--tl);
+  letter-spacing: -0.01em;
+}
+
+.nav-center { display: flex; align-items: center; gap: 2px; }
+
+.ntab {
+  padding: 7px 16px;
+  background: transparent; border: none;
+  border-radius: 7px;
+  font-family: var(--sans); font-size: 13px; font-weight: 500;
+  cursor: pointer; color: var(--muted-l);
+  transition: all 0.15s;
+}
+.ntab:hover { background: rgba(246,243,238,0.07); color: var(--tl); }
+.ntab.active { background: rgba(78,140,104,0.18); color: var(--mint); }
+
+.nav-right { display: flex; align-items: center; gap: 12px; }
+
+.nav-usage {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 12px;
+  background: rgba(246,243,238,0.05);
+  border: 1px solid var(--border-l);
+  border-radius: 8px;
+}
+.nav-usage-bar { width: 56px; height: 3px; background: rgba(246,243,238,0.1); border-radius: 99px; overflow: hidden; }
+.nav-usage-fill { height: 100%; background: var(--lime); border-radius: 99px; transition: width 0.4s; }
+.nav-usage-txt { font-size: 11px; color: var(--muted-l); font-family: var(--mono); }
+
+.nav-user { display: flex; align-items: center; gap: 8px; }
+.nav-avatar {
+  width: 28px; height: 28px;
+  background: var(--leaf);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: var(--tl);
+}
+.nav-name { font-size: 13px; color: var(--muted-l); }
+
+.btn-upgrade {
+  padding: 7px 16px;
+  background: var(--lime); color: var(--ink);
+  border: none; border-radius: 7px;
+  font-family: var(--sans); font-size: 12px; font-weight: 700;
+  cursor: pointer; transition: all 0.15s;
+  display: flex; align-items: center; gap: 6px;
+}
+.btn-upgrade:hover { background: #c4f060; transform: translateY(-1px); }
+
+.btn-signout {
+  padding: 7px 12px;
+  background: transparent;
+  border: 1px solid var(--border-l);
+  border-radius: 7px;
+  color: var(--muted-l);
+  font-family: var(--sans); font-size: 12px;
+  cursor: pointer; transition: all 0.15s;
+}
+.btn-signout:hover { border-color: rgba(246,243,238,0.25); color: var(--tl); }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   PAGE SYSTEM
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.app-page { display: none; }
+.app-page.active { display: block; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   COMPOSE PAGE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.page-hero {
+  background: var(--ink);
+  padding: 52px 40px 60px;
+  position: relative; overflow: hidden;
+}
+.page-hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(78,140,104,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(78,140,104,0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+}
+.page-hero::after {
+  content: '';
+  position: absolute;
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(78,140,104,0.12), transparent 60%);
+  top: -180px; right: -80px;
+  pointer-events: none;
+}
+
+.page-hero-inner { position: relative; z-index: 1; }
+
+.hero-pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 4px 12px;
+  background: rgba(78,140,104,0.16);
+  border: 1px solid rgba(126,200,160,0.2);
+  border-radius: 99px;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--mint); margin-bottom: 16px;
+}
+
+.page-hero h2 {
+  font-family: var(--serif);
+  font-size: clamp(26px, 2.8vw, 40px);
+  font-weight: 400;
+  color: var(--tl);
+  letter-spacing: -0.02em;
+  line-height: 1.12;
+  margin-bottom: 10px;
+}
+.page-hero h2 em { font-style: italic; color: var(--lime); }
+.page-hero p { font-size: 14px; color: var(--muted-l); max-width: 480px; line-height: 1.7; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   COMPOSE LAYOUT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.compose-body {
+  max-width: 1140px; margin: 0 auto;
+  padding: 28px 36px 80px;
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+/* Input Card */
+.input-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  position: sticky; top: 76px;
+}
+
+.ic-header {
+  padding: 16px 20px;
+  background: var(--ink);
+  display: flex; align-items: center; gap: 10px;
+  border-bottom: 1px solid var(--border-l);
+}
+
+.ic-header-icon {
+  width: 32px; height: 32px;
+  background: rgba(78,140,104,0.2);
+  border: 1px solid rgba(78,140,104,0.3);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.ic-header h3 { font-family: var(--serif); font-size: 15px; color: var(--tl); font-weight: 400; }
+.ic-header p { font-size: 10.5px; color: var(--muted-l); margin-top: 1px; }
+
+.ic-body { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+
+/* Form fields */
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field-label {
+  font-size: 10px; font-weight: 700;
+  color: var(--muted); letter-spacing: 0.08em;
+  text-transform: uppercase;
+  display: flex; align-items: center; gap: 4px;
+}
+.field-label .req { color: var(--leaf); }
+
+.f-input, .f-select, .f-textarea {
+  padding: 10px 13px;
+  background: var(--paper);
+  border: 1.5px solid var(--border);
+  border-radius: 9px;
+  font-family: var(--sans); font-size: 13px;
+  color: var(--td); outline: none;
+  transition: all 0.2s; resize: none;
+  appearance: none; width: 100%;
+}
+.f-input:focus, .f-select:focus, .f-textarea:focus {
+  border-color: var(--leaf);
+  background: var(--white);
+  box-shadow: 0 0 0 3px rgba(78,140,104,0.09);
+}
+.f-input::placeholder, .f-textarea::placeholder { color: rgba(17,23,20,0.28); }
+.f-textarea { min-height: 76px; line-height: 1.6; }
+.f-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* Feature checkboxes */
+.feat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+.feat-item {
+  display: flex; align-items: center; gap: 7px;
+  padding: 7px 9px;
+  background: var(--paper);
+  border: 1.5px solid var(--border);
+  border-radius: 7px;
+  cursor: pointer; font-size: 11.5px; font-weight: 500;
+  transition: all 0.15s; user-select: none;
+  color: var(--muted);
+}
+.feat-item:hover { border-color: rgba(78,140,104,0.35); color: var(--td); }
+.feat-item.on { background: rgba(78,140,104,0.07); border-color: rgba(78,140,104,0.3); color: var(--td); }
+.feat-item input { display: none; }
+.feat-check {
+  width: 15px; height: 15px;
+  border: 1.5px solid var(--border);
+  border-radius: 3px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: all 0.15s;
+}
+.feat-item.on .feat-check { background: var(--leaf); border-color: var(--leaf); }
+
+/* Tone buttons */
+.tone-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 5px; }
+.tone-btn {
+  padding: 8px 4px;
+  background: var(--paper);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-family: var(--sans); font-size: 11px; font-weight: 600;
+  cursor: pointer; text-align: center;
+  transition: all 0.15s; color: var(--muted);
+}
+.tone-btn.on { background: var(--ink); border-color: var(--ink); color: var(--tl); }
+.tone-btn:hover:not(.on) { border-color: var(--ink); color: var(--td); }
+
+/* Platform toggles */
+.plat-row { display: flex; gap: 5px; flex-wrap: wrap; }
+.plat {
+  display: flex; align-items: center; gap: 5px;
+  padding: 6px 11px;
+  background: var(--paper);
+  border: 1.5px solid var(--border);
+  border-radius: 99px;
+  font-size: 11.5px; font-weight: 600;
+  cursor: pointer; transition: all 0.15s; user-select: none;
+  color: var(--muted);
+}
+.plat.on { border-color: transparent; color: white; }
+.plat.on svg path, .plat.on svg rect, .plat.on svg circle { fill: white; }
+.pt-wa.on { background: #25d366; }
+.pt-ig.on { background: linear-gradient(135deg,#f09433,#dc2743,#bc1888); }
+.pt-fb.on { background: #1877f2; }
+.pt-tw.on { background: #000; }
+.pt-ln.on { background: #0a66c2; }
+.plat input { display: none; }
+
+/* Media drop */
+.media-drop {
+  border: 1.5px dashed var(--border);
+  border-radius: 9px; padding: 13px;
+  display: flex; align-items: center; gap: 10px;
+  cursor: pointer; transition: border-color 0.2s;
+}
+.media-drop:hover { border-color: rgba(78,140,104,0.5); }
+
+/* Generate button */
+.btn-generate {
+  width: 100%; padding: 14px;
+  background: var(--leaf); color: var(--tl);
+  border: none; border-radius: var(--r);
+  font-family: var(--sans); font-size: 14px; font-weight: 700;
+  cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center; gap: 9px;
+}
+.btn-generate:hover { background: var(--sage); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(78,140,104,0.3); }
+.btn-generate:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none; }
+.btn-generate .spin {
+  width: 16px; height: 16px;
+  border: 2px solid rgba(246,243,238,0.25);
+  border-top-color: var(--tl);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: none;
+}
+.btn-generate.loading .spin { display: block; }
+.btn-generate.loading .btxt { opacity: 0.7; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   OUTPUT AREA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.output-area { display: flex; flex-direction: column; gap: 18px; }
+
+.stats-bar {
+  display: none;
+  grid-template-columns: repeat(4,1fr);
+  gap: 14px;
+}
+.stats-bar.show { display: grid; }
+.stat-card {
+  background: var(--ink);
+  border-radius: var(--r);
+  padding: 18px 20px;
+}
+.stat-n { font-family: var(--serif); font-size: 28px; color: var(--lime); line-height: 1; }
+.stat-l { font-size: 10px; color: var(--muted-l); margin-top: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; }
+
+/* Empty state */
+.empty-state {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 60px 40px; text-align: center;
+  box-shadow: var(--shadow);
+}
+.empty-icon {
+  width: 72px; height: 72px;
+  background: rgba(78,140,104,0.07);
+  border: 1px solid rgba(78,140,104,0.14);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 20px;
+}
+.empty-state h3 { font-family: var(--serif); font-size: 22px; font-weight: 400; margin-bottom: 10px; }
+.empty-state p { font-size: 13.5px; color: var(--muted); max-width: 340px; margin: 0 auto 24px; line-height: 1.7; }
+.steps { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; }
+.step-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+.step-n { width: 22px; height: 22px; background: rgba(78,140,104,0.1); border: 1px solid rgba(78,140,104,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: var(--leaf); }
+
+/* Result cards */
+.result-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  animation: fadeUp 0.3s ease both;
+  margin-bottom: 16px;
+}
+@keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+.rc-head {
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--paper2);
+}
+
+.rc-label { display: flex; align-items: center; gap: 8px; }
+
+.rc-badge {
+  padding: 3px 10px;
+  border-radius: 99px;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.07em; text-transform: uppercase;
+}
+.rb-main { background: rgba(78,140,104,0.1); color: var(--sage); border: 1px solid rgba(78,140,104,0.2); }
+.rb-wa   { background: rgba(37,211,102,0.1); color: #156631; border: 1px solid rgba(37,211,102,0.2); }
+.rb-ig   { background: rgba(228,64,95,0.08); color: #b02a44; border: 1px solid rgba(228,64,95,0.15); }
+.rb-fb   { background: rgba(24,119,242,0.08); color: #1877f2; border: 1px solid rgba(24,119,242,0.15); }
+.rb-tw   { background: rgba(0,0,0,0.05); color: #222; border: 1px solid rgba(0,0,0,0.1); }
+.rb-ln   { background: rgba(10,102,194,0.08); color: #0a66c2; border: 1px solid rgba(10,102,194,0.15); }
+
+.rc-title { font-size: 13px; font-weight: 600; color: var(--td); }
+.rc-actions { display: flex; gap: 6px; }
+
+.btn-copy, .btn-redo {
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-family: var(--sans); font-size: 11px; font-weight: 600;
+  cursor: pointer; transition: all 0.15s;
+  border: 1.5px solid var(--border);
+  display: flex; align-items: center; gap: 5px;
+}
+.btn-copy { background: var(--ink); color: var(--tl); border-color: var(--ink); }
+.btn-copy:hover { background: var(--ink2); }
+.btn-copy.done { background: var(--leaf); border-color: var(--leaf); }
+.btn-redo { background: transparent; color: var(--muted); }
+.btn-redo:hover { background: var(--paper2); color: var(--td); }
+
+.rc-content {
+  padding: 18px 20px;
+  font-size: 14px; line-height: 1.75;
+  color: var(--td); white-space: pre-wrap;
+}
+.rc-content.serif { font-family: var(--serif); font-size: 15px; line-height: 1.85; }
+.rc-footer { padding: 8px 18px; border-top: 1px solid var(--border); font-size: 10.5px; font-family: var(--mono); color: var(--muted); text-align: right; }
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   OTHER PAGES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.page-body { max-width: 1140px; margin: 0 auto; padding: 28px 36px 80px; }
+
+.card { background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 22px; margin-bottom: 14px; box-shadow: var(--shadow); }
+.card-title { font-family: var(--serif); font-size: 15px; color: var(--td); margin-bottom: 14px; }
+
+.stats-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 24px; }
+.stats-row .stat-card { background: var(--ink); }
+
+/* Templates */
+.tpl-card {
+  background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 16px;
+  margin-bottom: 10px; display: flex; gap: 14px; align-items: flex-start;
+  box-shadow: var(--shadow); transition: all 0.15s;
+}
+.tpl-card:hover { border-color: rgba(78,140,104,0.3); transform: translateX(2px); }
+.tpl-thumb {
+  width: 46px; height: 46px; border-radius: 9px;
+  background: var(--paper2); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; overflow: hidden;
+}
+.tpl-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.tpl-info { flex: 1; }
+.tpl-name { font-family: var(--serif); font-size: 14px; margin-bottom: 2px; }
+.tpl-meta { font-size: 10px; color: var(--muted); }
+.tpl-preview { font-size: 12px; color: var(--muted); margin-top: 5px; line-height: 1.5; font-style: italic; }
+.tpl-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+/* Admin */
+.admin-table-wrap { background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow); }
+.admin-table-head { padding: 14px 20px; background: var(--paper2); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.admin-table-head h3 { font-family: var(--serif); font-size: 15px; }
+table { width: 100%; border-collapse: collapse; }
+th { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); padding: 10px 16px; text-align: left; border-bottom: 1px solid var(--border); background: var(--paper2); }
+td { padding: 12px 16px; font-size: 13px; border-bottom: 1px solid rgba(17,23,20,0.05); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(78,140,104,0.02); }
+.plan-badge { padding: 3px 8px; border-radius: 99px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+.pb-free    { background: var(--paper2); color: var(--muted); }
+.pb-starter { background: rgba(78,140,104,0.1); color: var(--sage); }
+.pb-pro     { background: rgba(181,232,83,0.15); color: #4a6600; }
+.pb-agency  { background: var(--ink); color: var(--tl); }
+.plan-sel { padding: 5px 8px; border: 1.5px solid var(--border); border-radius: 7px; font-size: 12px; background: var(--paper); cursor: pointer; outline: none; }
+.plan-sel:focus { border-color: var(--leaf); }
+
+/* Buttons */
+.btn { padding: 9px 16px; border-radius: 9px; font-family: var(--sans); font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; display: inline-flex; align-items: center; gap: 6px; }
+.btn-primary { background: var(--ink); color: var(--tl); } .btn-primary:hover { background: var(--ink2); }
+.btn-green { background: var(--leaf); color: var(--tl); } .btn-green:hover { background: var(--sage); }
+.btn-ghost { background: transparent; color: var(--muted); border: 1.5px solid var(--border); } .btn-ghost:hover { color: var(--td); border-color: rgba(17,23,20,0.2); }
+.btn-danger { background: rgba(220,38,38,0.07); color: #dc2626; border: 1px solid rgba(220,38,38,0.18); }
+.btn-sm { padding: 5px 11px; font-size: 11.5px; }
+
+/* Upgrade modal */
+.modal-overlay { position: fixed; inset: 0; background: rgba(17,23,20,0.5); backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal { background: var(--white); border-radius: 20px; padding: 36px; max-width: 560px; width: 90%; box-shadow: var(--shadow-lg); transform: scale(0.95); transition: transform 0.2s; }
+.modal-overlay.open .modal { transform: scale(1); }
+.modal h2 { font-family: var(--serif); font-size: 26px; font-weight: 400; margin-bottom: 8px; letter-spacing: -0.02em; }
+.modal p { font-size: 14px; color: var(--muted); margin-bottom: 24px; line-height: 1.7; }
+.plans-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 12px; margin-bottom: 20px; }
+.plan-card { padding: 18px; border: 1.5px solid var(--border); border-radius: 12px; cursor: pointer; transition: all 0.15s; }
+.plan-card:hover { border-color: var(--leaf); transform: translateY(-1px); }
+.plan-card.hot { border-color: var(--leaf); background: rgba(78,140,104,0.04); }
+.pc-name { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 6px; }
+.plan-card.hot .pc-name { color: var(--leaf); }
+.pc-price { font-family: var(--serif); font-size: 24px; color: var(--td); line-height: 1; }
+.pc-limit { font-size: 12px; color: var(--muted); margin-top: 5px; }
+.pc-desc { font-size: 11px; color: var(--muted); margin-top: 5px; line-height: 1.5; }
+.modal-note { font-size: 11px; color: var(--muted); text-align: center; font-family: var(--mono); }
+
+/* Toast */
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--ink); color: var(--tl); padding: 12px 18px; border-radius: 10px; font-size: 13px; font-weight: 500; box-shadow: var(--shadow-lg); z-index: 2000; transform: translateY(14px); opacity: 0; transition: all 0.25s; max-width: 300px; }
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.success { border-left: 3px solid var(--mint); }
+.toast.error   { border-left: 3px solid #ef4444; }
+.toast.info    { border-left: 3px solid var(--lime); }
+
+/* Responsive */
+@media(max-width:960px) {
+  #authScreen.active { grid-template-columns: 1fr; }
+  .auth-left { display: none; }
+  .auth-right { padding: 40px 24px; }
+  .compose-body { grid-template-columns: 1fr; padding: 22px 20px 60px; }
+  .input-card { position: static; }
+  .page-hero, .app-nav { padding-left: 20px; padding-right: 20px; }
+  .page-body, .compose-body { padding-left: 20px; padding-right: 20px; }
+  .stats-bar.show, .stats-row { grid-template-columns: repeat(2,1fr); }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════ ICON DEFINITIONS (inline SVG sprites) ══════════ -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <defs>
+    <!-- PropScribe Logo Mark: House with pen nib -->
+    <symbol id="icon-logo" viewBox="0 0 24 24" fill="none">
+      <path d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V10.5z" fill="currentColor" opacity="0.9"/>
+      <path d="M9 21V13h6v8" fill="white" opacity="0.3"/>
+      <path d="M14 8l1.5 1.5-4 4L10 13l-.5-1.5L14 8z" fill="white"/>
+      <circle cx="14" cy="8" r="0.6" fill="white"/>
+    </symbol>
+
+    <!-- Compose / Pen -->
+    <symbol id="icon-compose" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M13.5 3.5a2 2 0 0 1 2.83 2.83L6 16.6 2 18l1.4-4L13.5 3.5z"/>
+    </symbol>
+
+    <!-- Templates / Grid -->
+    <symbol id="icon-templates" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="2" y="2" width="7" height="7" rx="1.5"/>
+      <rect x="11" y="2" width="7" height="7" rx="1.5"/>
+      <rect x="2" y="11" width="7" height="7" rx="1.5"/>
+      <rect x="11" y="11" width="7" height="7" rx="1.5"/>
+    </symbol>
+
+    <!-- History / Clock -->
+    <symbol id="icon-history" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="10" cy="10" r="8"/>
+      <path d="M10 6v4l2.5 2.5"/>
+    </symbol>
+
+    <!-- Admin / Shield -->
+    <symbol id="icon-admin" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10 2L3 5.5v5C3 14.5 6 17.5 10 19c4-1.5 7-4.5 7-8.5v-5L10 2z"/>
+      <path d="M7 10l2 2 4-4"/>
+    </symbol>
+
+    <!-- Property house -->
+    <symbol id="icon-property" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M2 9L10 2l8 7"/>
+      <path d="M4 8v9a1 1 0 0 0 1 1h3v-5h4v5h3a1 1 0 0 0 1-1V8"/>
+    </symbol>
+
+    <!-- Generate / Sparkle -->
+    <symbol id="icon-generate" viewBox="0 0 20 20" fill="currentColor">
+      <path d="M10 2l1.8 5.2L17 9l-5.2 1.8L10 16l-1.8-5.2L3 9l5.2-1.8L10 2z"/>
+      <path d="M16 1l.9 2.1L19 4l-2.1.9L16 7l-.9-2.1L13 4l2.1-.9L16 1z" opacity="0.5"/>
+    </symbol>
+
+    <!-- Copy -->
+    <symbol id="icon-copy" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="7" y="7" width="10" height="10" rx="2"/>
+      <path d="M13 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/>
+    </symbol>
+
+    <!-- Redo / Refresh -->
+    <symbol id="icon-redo" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14.5 3.5A7 7 0 1 1 5.5 6.5"/>
+      <path d="M14.5 1v3.5H11"/>
+    </symbol>
+
+    <!-- Upgrade / Arrow up -->
+    <symbol id="icon-upgrade" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10 15V5M5 10l5-5 5 5"/>
+      <path d="M5 17h10" stroke-width="1.5"/>
+    </symbol>
+
+    <!-- Signout -->
+    <symbol id="icon-signout" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M13 4h4a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-4"/>
+      <path d="M8 14l4-4-4-4M3 10h9"/>
+    </symbol>
+
+    <!-- WhatsApp -->
+    <symbol id="icon-wa" viewBox="0 0 20 20" fill="currentColor">
+      <path d="M10 1.5A8.5 8.5 0 0 0 2.5 10c0 1.5.4 2.9 1.1 4.1L2.5 18.5l4.5-1.1A8.5 8.5 0 1 0 10 1.5zM7.5 12.8c-.2-.1-1.3-.6-1.5-.7-.2-.1-.3-.1-.5.1-.1.2-.5.7-.6.8-.1.1-.2.1-.4 0-.2-.1-.9-.3-1.7-1-.6-.5-1-1.2-1.1-1.4-.1-.2 0-.3.1-.4l.3-.4c.1-.1.1-.2.2-.3.1-.1 0-.2 0-.3-.1-.1-.5-1.2-.7-1.6-.2-.4-.3-.3-.5-.3h-.4c-.1 0-.4.1-.6.3-.2.2-.8.8-.8 1.9s.8 2.2 1 2.4c.1.2 1.7 2.5 4 3.5.6.2 1 .4 1.3.5.6.2 1.1.1 1.5.1.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.1-1.2-.1-.1-.2-.2-.4-.3z"/>
+    </symbol>
+
+    <!-- Instagram -->
+    <symbol id="icon-ig" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="2.5" y="2.5" width="15" height="15" rx="4"/>
+      <circle cx="10" cy="10" r="3.5"/>
+      <circle cx="14.5" cy="5.5" r="0.5" fill="currentColor"/>
+    </symbol>
+
+    <!-- Facebook -->
+    <symbol id="icon-fb" viewBox="0 0 20 20" fill="currentColor">
+      <path d="M18 10A8 8 0 1 0 10 18v-5.6H8V10h2V8.2C10 6.3 11.1 5 13.1 5c.9 0 1.9.1 1.9.1v2h-1.1c-1 0-1.3.6-1.3 1.3V10h2.2l-.4 2.4H12.6V18A8 8 0 0 0 18 10z"/>
+    </symbol>
+
+    <!-- Twitter/X -->
+    <symbol id="icon-tw" viewBox="0 0 20 20" fill="currentColor">
+      <path d="M15.3 2h2.4L11.5 8.9 18.5 18h-5.3l-4.4-5.7L3.4 18H1l6.6-7.5L1 2h5.4l4 5.2L15.3 2zM14.5 16.5h1.3L5.9 3.3H4.5l10 13.2z"/>
+    </symbol>
+
+    <!-- LinkedIn -->
+    <symbol id="icon-ln" viewBox="0 0 20 20" fill="currentColor">
+      <path d="M4.5 7H2v11h2.5V7zM3.25 5.8a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM18 12.2c0-2.7-1.4-5.2-4.5-5.2-1.3 0-2.4.6-3 1.5V7H8v11h2.5v-5.9c0-1.6.8-2.5 2.1-2.5 1.2 0 1.9.8 1.9 2.4V18H18v-5.8z"/>
+    </symbol>
+
+    <!-- Upload -->
+    <symbol id="icon-upload" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10 13V5M6 8l4-4 4 4"/>
+      <path d="M3 15v1a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-1"/>
+    </symbol>
+
+    <!-- Checkmark (small) -->
+    <symbol id="icon-check" viewBox="0 0 12 12" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M2 6l3 3 5-5"/>
+    </symbol>
+
+    <!-- Delete / trash -->
+    <symbol id="icon-trash" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 5h14M8 5V3h4v2M6 5v12a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V5"/>
+    </symbol>
+
+    <!-- Plus -->
+    <symbol id="icon-plus" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <path d="M10 4v12M4 10h12"/>
+    </symbol>
+
+    <!-- Refresh -->
+    <symbol id="icon-refresh" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 10A6 6 0 0 1 15.5 6.5"/>
+      <path d="M16 10A6 6 0 0 1 4.5 13.5"/>
+      <path d="M15.5 4v3.5H12"/>
+      <path d="M4.5 16v-3.5H8"/>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- ══════════ AUTH SCREEN ══════════ -->
+<div class="screen" id="authScreen">
+
+  <!-- Left: Brand Panel -->
+  <div class="auth-left">
+    <div class="auth-brand">
+      <div class="logo-mark">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <use href="#icon-logo"/>
+        </svg>
+      </div>
+      <div class="logo-wordmark">
+        <span class="logo-name">PropScribe</span>
+        <span class="logo-sub">Nigeria</span>
+      </div>
+    </div>
+
+    <div class="auth-hero">
+      <div class="auth-eyebrow">
+        <div class="auth-eyebrow-dot"></div>
+        AI-Powered &middot; 100% Free
+      </div>
+      <h1>Write <em>Winning</em><br>Property Listings<br>in Seconds</h1>
+      <p>Nigerian real estate agents save 2+ hours per listing. One click. Every platform. Professional copy that converts clients.</p>
+    </div>
+
+    <div class="auth-features">
+      <div class="auth-feature">
+        <div class="auth-feature-icon">
+          <svg width="15" height="15" color="#7ec8a0"><use href="#icon-generate"/></svg>
+        </div>
+        <div class="auth-feature-text">
+          <strong>AI writes in under 10 seconds</strong>
+          <span>Powered by Groq's free Llama model</span>
+        </div>
+      </div>
+      <div class="auth-feature">
+        <div class="auth-feature-icon">
+          <svg width="15" height="15" color="#7ec8a0"><use href="#icon-compose"/></svg>
+        </div>
+        <div class="auth-feature-text">
+          <strong>5 platforms at once</strong>
+          <span>WhatsApp, Instagram, Facebook, Twitter, LinkedIn</span>
+        </div>
+      </div>
+      <div class="auth-feature">
+        <div class="auth-feature-icon">
+          <svg width="15" height="15" color="#7ec8a0"><use href="#icon-property"/></svg>
+        </div>
+        <div class="auth-feature-text">
+          <strong>Built for the Nigerian market</strong>
+          <span>Tone, language and context that resonates locally</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Form Panel -->
+  <div class="auth-right">
+    <div class="auth-form-wrap">
+      <h2>Welcome Back</h2>
+      <p class="sub">Sign in to your PropScribe account</p>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="switchTab('login')">Sign In</button>
+        <button class="auth-tab" onclick="switchTab('register')">Create Account</button>
+      </div>
+
+      <!-- Login -->
+      <div class="auth-form" id="loginForm">
+        <div class="aerr" id="loginError"></div>
+        <div class="fg">
+          <label class="fl">Email Address</label>
+          <input class="fi" type="email" id="loginEmail" placeholder="you@email.com">
+        </div>
+        <div class="fg">
+          <label class="fl">Password</label>
+          <input class="fi" type="password" id="loginPassword" placeholder="Your password" onkeydown="if(event.key==='Enter')login()">
+        </div>
+        <button class="btn-auth" onclick="login()" id="loginBtn">
+          Sign In
+          <svg width="16" height="16" color="currentColor"><use href="#icon-signout"/></svg>
+        </button>
+      </div>
+
+      <!-- Register -->
+      <div class="auth-form hidden" id="registerForm">
+        <div class="aerr" id="registerError"></div>
+        <div class="fg">
+          <label class="fl">Full Name</label>
+          <input class="fi" type="text" id="regName" placeholder="e.g. Adedayo Billion">
+        </div>
+        <div class="fg">
+          <label class="fl">Email Address</label>
+          <input class="fi" type="email" id="regEmail" placeholder="you@email.com">
+        </div>
+        <div class="fg">
+          <label class="fl">Password</label>
+          <input class="fi" type="password" id="regPassword" placeholder="Min 8 characters" onkeydown="if(event.key==='Enter')register()">
+        </div>
+        <button class="btn-auth" onclick="register()" id="registerBtn">
+          Create Free Account
+          <svg width="16" height="16" color="currentColor"><use href="#icon-signout"/></svg>
+        </button>
+      </div>
+
+      <p class="auth-plans-title">Plans &amp; Pricing</p>
+      <div class="auth-plans">
+        <div class="aplan">
+          <div class="aplan-name">Free</div>
+          <div class="aplan-price">&#8358;0</div>
+          <div class="aplan-lim">5 generations/mo</div>
+        </div>
+        <div class="aplan hot">
+          <div class="aplan-name">Starter</div>
+          <div class="aplan-price">&#8358;5,000</div>
+          <div class="aplan-lim">50 generations/mo</div>
+        </div>
+        <div class="aplan hot">
+          <div class="aplan-name">Pro</div>
+          <div class="aplan-price">&#8358;12,000</div>
+          <div class="aplan-lim">200 generations/mo</div>
+        </div>
+        <div class="aplan">
+          <div class="aplan-name">Agency</div>
+          <div class="aplan-price">&#8358;25,000</div>
+          <div class="aplan-lim">999 generations/mo</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ APP SCREEN ══════════ -->
+<div class="screen" id="appScreen">
+
+  <!-- Navigation -->
+  <nav class="app-nav">
+    <div class="nav-brand">
+      <div class="nav-logo-mark">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
+          <use href="#icon-logo"/>
+        </svg>
+      </div>
+      <span class="nav-logo-name">PropScribe</span>
+    </div>
+
+    <div class="nav-center">
+      <button class="ntab active" onclick="showPage('compose')" id="tab-compose">
+        Compose
+      </button>
+      <button class="ntab" onclick="showPage('templates')" id="tab-templates">
+        Templates
+      </button>
+      <button class="ntab" onclick="showPage('history')" id="tab-history">
+        History
+      </button>
+    </div>
+
+    <div class="nav-right">
+      <div class="nav-usage">
+        <div class="nav-usage-bar"><div class="nav-usage-fill" id="usageFill" style="width:0%"></div></div>
+        <span class="nav-usage-txt" id="usageText">0/5</span>
+      </div>
+      <button class="btn-upgrade" onclick="openUpgrade()" id="upgradeBtn">
+        <svg width="13" height="13" color="var(--ink)"><use href="#icon-upgrade"/></svg>
+        Upgrade
+      </button>
+      <div class="nav-user">
+        <div class="nav-avatar" id="userAvatar">B</div>
+        <span class="nav-name" id="userName">User</span>
+      </div>
+      <button class="btn-signout" onclick="logout()">
+        Sign out
+      </button>
+    </div>
+  </nav>
+
+  <!-- ── COMPOSE PAGE ── -->
+  <div class="app-page active" id="page-compose">
+
+    <div class="page-hero">
+      <div class="page-hero-inner">
+        <div class="hero-pill">
+          <div style="width:5px;height:5px;border-radius:50%;background:var(--lime);box-shadow:0 0 6px var(--lime)"></div>
+          Powered by Groq AI &middot; Free
+        </div>
+        <h2>Turn Property Details into<br><em>Compelling Listings</em> Instantly</h2>
+        <p>Fill in the details. Get professional copy for every platform in under 10 seconds.</p>
+      </div>
+    </div>
+
+    <div class="compose-body">
+
+      <!-- Input Card -->
+      <div class="input-card">
+        <div class="ic-header">
+          <div class="ic-header-icon">
+            <svg width="16" height="16" color="var(--mint)"><use href="#icon-property"/></svg>
+          </div>
+          <div>
+            <h3>Property Details</h3>
+            <p>Fill in to generate your listings</p>
+          </div>
+        </div>
+
+        <div class="ic-body">
+
+          <div class="field">
+            <label class="field-label">Template</label>
+            <select class="f-select" id="templateSelect" onchange="loadTemplate()">
+              <option value="">Custom message</option>
+            </select>
+          </div>
+
+          <div class="f-row">
+            <div class="field">
+              <label class="field-label">Property Type <span class="req">*</span></label>
+              <select class="f-select" id="propType">
+                <option value="">Select type...</option>
+                <option>Apartment / Flat</option><option>Duplex</option><option>Bungalow</option>
+                <option>Terrace House</option><option>Semi-detached</option><option>Detached House</option>
+                <option>Mansion / Villa</option><option>Studio</option><option>Short-let Apartment</option>
+                <option>Office Space</option><option>Shop / Retail</option><option>Warehouse</option><option>Land</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label">Listing Type <span class="req">*</span></label>
+              <select class="f-select" id="listingType">
+                <option value="">Select...</option>
+                <option>For Sale</option><option>For Rent</option><option>Short Let</option>
+                <option>Lease</option><option>Joint Venture</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">Location <span class="req">*</span></label>
+            <input class="f-input" type="text" id="location" placeholder="e.g. Lekki Phase 1, Lagos">
+          </div>
+
+          <div class="f-row">
+            <div class="field">
+              <label class="field-label">Price <span class="req">*</span></label>
+              <input class="f-input" type="text" id="price" placeholder="e.g. &#8358;45,000,000">
+            </div>
+            <div class="field">
+              <label class="field-label">Size / Rooms</label>
+              <input class="f-input" type="text" id="size" placeholder="e.g. 3 bed, 200sqm">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">Key Features</label>
+            <div class="feat-grid" id="featGrid">
+              <label class="feat-item" onclick="tFeat(this)"><input type="checkbox" value="Swimming Pool"><span class="feat-check"></span>Swimming Pool</label>
+              <label class="feat-item" onclick="tFeat(this)"><input type="checkbox" value="24/7 Electricity"><span class="feat-check"></span>24/7 Light</label>
+              <label class="feat-item" onclick="tFeat(this)"><input type="checkbox" value="BQ / Boys Quarters"><span class="feat-check"></span>BQ Quarters</label>
+              <label class="feat-item" onclick="tFeat(this)"><input type="checkbox" value="Fitted Kitchen"><span class="feat-check"></span>Fitted Kitchen</label>
+              <label class="feat-item" onclick="tFeat(this)"><input type="checkbox" value="Security / Estate"><span class="feat-check"></span>Estate Security</label>
+              <label class="feat-item" onclick="tFeat(this)"><input type="checkbox" value="Parking Space"><span class="feat-check"></span>Parking Space</label>
+              <label class="feat-item" onclick="tFeat(this)"><input type="checkbox" value="Air Conditioning"><span class="feat-check"></span>Air Conditioning</label>
+              <label class="feat-item" onclick="tFeat(this)"><input type="checkbox" value="Gym / Fitness"><span class="feat-check"></span>Gym / Fitness</label>
+              <label class="feat-item" onclick="tFeat(this)"><input type="checkbox" value="CCTV"><span class="feat-check"></span>CCTV</label>
+              <label class="feat-item" onclick="tFeat(this)"><input type="checkbox" value="Waterfront View"><span class="feat-check"></span>Waterfront</label>
+              <label class="feat-item" onclick="tFeat(this)"><input type="checkbox" value="Smart Home"><span class="feat-check"></span>Smart Home</label>
+              <label class="feat-item" onclick="tFeat(this)"><input type="checkbox" value="Rooftop Terrace"><span class="feat-check"></span>Rooftop</label>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">Extra Details</label>
+            <textarea class="f-textarea" id="extraDetails" placeholder="Flexible payment plan, newly renovated, close to Eko Atlantic..."></textarea>
+          </div>
+
+          <div class="field">
+            <label class="field-label">Writing Tone</label>
+            <div class="tone-grid">
+              <button class="tone-btn on" onclick="sTone(this,'Professional')">Professional</button>
+              <button class="tone-btn" onclick="sTone(this,'Luxury')">Luxury</button>
+              <button class="tone-btn" onclick="sTone(this,'Urgent')">Urgent Sale</button>
+              <button class="tone-btn" onclick="sTone(this,'Casual')">Casual</button>
+              <button class="tone-btn" onclick="sTone(this,'Investment')">Investor</button>
+              <button class="tone-btn" onclick="sTone(this,'Diaspora')">Diaspora</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label">Platforms</label>
+            <div class="plat-row">
+              <label class="plat pt-wa on" onclick="tPlat(this)">
+                <input type="checkbox" checked>
+                <svg width="13" height="13"><use href="#icon-wa"/></svg>
+                WhatsApp
+              </label>
+              <label class="plat pt-ig on" onclick="tPlat(this)">
+                <input type="checkbox" checked>
+                <svg width="13" height="13"><use href="#icon-ig"/></svg>
+                Instagram
+              </label>
+              <label class="plat pt-fb on" onclick="tPlat(this)">
+                <input type="checkbox" checked>
+                <svg width="13" height="13"><use href="#icon-fb"/></svg>
+                Facebook
+              </label>
+              <label class="plat pt-tw" onclick="tPlat(this)">
+                <input type="checkbox">
+                <svg width="13" height="13"><use href="#icon-tw"/></svg>
+                Twitter
+              </label>
+              <label class="plat pt-ln" onclick="tPlat(this)">
+                <input type="checkbox">
+                <svg width="13" height="13"><use href="#icon-ln"/></svg>
+                LinkedIn
+              </label>
+            </div>
+          </div>
+
+          <button class="btn-generate" id="genBtn" onclick="generate()">
+            <div class="spin"></div>
+            <svg width="16" height="16" color="white" class="btxt-icon"><use href="#icon-generate"/></svg>
+            <span class="btxt">Generate Listings</span>
+          </button>
+
+        </div>
+      </div>
+
+      <!-- Output Area -->
+      <div class="output-area">
+        <div class="stats-bar" id="statsBar">
+          <div class="stat-card"><div class="stat-n" id="stot">0</div><div class="stat-l">Generated</div></div>
+          <div class="stat-card"><div class="stat-n" id="splat">0</div><div class="stat-l">Platforms</div></div>
+          <div class="stat-card"><div class="stat-n" id="stime">0m</div><div class="stat-l">Time Saved</div></div>
+          <div class="stat-card"><div class="stat-n" id="swords">0</div><div class="stat-l">Words</div></div>
+        </div>
+
+        <div class="empty-state" id="emptyState">
+          <div class="empty-icon">
+            <svg width="32" height="32" color="var(--leaf)"><use href="#icon-compose"/></svg>
+          </div>
+          <h3>Ready to Write for You</h3>
+          <p>Fill in your property details on the left and click Generate. Professional copy for every platform in under 10 seconds.</p>
+          <div class="steps">
+            <div class="step-item"><div class="step-n">1</div>Enter details</div>
+            <div class="step-item"><div class="step-n">2</div>Pick platforms</div>
+            <div class="step-item"><div class="step-n">3</div>Copy &amp; post</div>
+          </div>
+        </div>
+
+        <div id="resultsContainer"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── TEMPLATES PAGE ── -->
+  <div class="app-page" id="page-templates">
+    <div class="page-hero">
+      <div class="page-hero-inner">
+        <h2>Message Templates</h2>
+        <p>Save reusable messages and load them in one click</p>
+      </div>
+    </div>
+    <div class="page-body">
+      <button class="btn btn-green" style="margin-bottom:16px" onclick="showAddTpl()">
+        <svg width="14" height="14" color="white"><use href="#icon-plus"/></svg>
+        New Template
+      </button>
+      <div id="addTplForm" style="display:none" class="card">
+        <div class="card-title">New Template</div>
+        <div class="field" style="margin-bottom:12px">
+          <label class="field-label">Template Name</label>
+          <input class="f-input" type="text" id="tplName" placeholder="e.g. Real Estate Intro">
+        </div>
+        <div class="field" style="margin-bottom:12px">
+          <label class="field-label">Image / Video <span style="text-transform:none;letter-spacing:0;font-weight:400;font-size:10px">(optional)</span></label>
+          <div class="media-drop" onclick="document.getElementById('tplMedia').click()">
+            <div id="tplMPH" style="display:flex;align-items:center;gap:10px;color:var(--muted)">
+              <svg width="18" height="18" color="var(--muted)"><use href="#icon-upload"/></svg>
+              <span style="font-size:13px">Attach image or video &mdash; JPG, PNG, MP4, max 64MB</span>
+            </div>
+            <div id="tplMLD" style="display:none;align-items:center;gap:10px;width:100%">
+              <img id="tplMThumb" style="width:42px;height:42px;border-radius:8px;object-fit:cover">
+              <span id="tplMName" style="font-size:12px;flex:1"></span>
+              <button onclick="clearTplM(event)" style="background:none;border:none;cursor:pointer;color:var(--muted);line-height:1;font-size:18px">&times;</button>
+            </div>
+          </div>
+          <input type="file" id="tplMedia" accept="image/*,video/*" style="display:none" onchange="handleTplM(event)">
+        </div>
+        <div class="field" style="margin-bottom:16px">
+          <label class="field-label">Message / Caption</label>
+          <textarea class="f-textarea" id="tplBody" placeholder="Hi {{name}}, I wanted to reach out about..."></textarea>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-green" onclick="saveTpl()">Save Template</button>
+          <button class="btn btn-ghost" onclick="cancelTpl()">Cancel</button>
+        </div>
+      </div>
+      <div id="tplList"></div>
+    </div>
+  </div>
+
+  <!-- ── HISTORY PAGE ── -->
+  <div class="app-page" id="page-history">
+    <div class="page-hero">
+      <div class="page-hero-inner">
+        <h2>Generation History</h2>
+        <p>All your property listing campaigns</p>
+      </div>
+    </div>
+    <div class="page-body">
+      <div class="stats-row" id="histStats"></div>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
+        <button class="btn btn-danger" onclick="clearHist()">Clear History</button>
+      </div>
+      <div id="histList"></div>
+    </div>
+  </div>
+
+  <!-- ── ADMIN PAGE ── -->
+  <div class="app-page" id="page-admin">
+    <div class="page-hero">
+      <div class="page-hero-inner">
+        <h2>Admin Dashboard</h2>
+        <p>Manage users and subscriptions</p>
+      </div>
+    </div>
+    <div class="page-body">
+      <div class="stats-row" id="adminStats"></div>
+      <div class="admin-table-wrap">
+        <div class="admin-table-head">
+          <h3>All Users</h3>
+          <button class="btn btn-ghost btn-sm" onclick="loadAdmin()">
+            <svg width="13" height="13" color="currentColor"><use href="#icon-refresh"/></svg>
+            Refresh
+          </button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Name &amp; Email</th>
+              <th>Plan</th>
+              <th>Generations</th>
+              <th>Joined</th>
+              <th>Last Active</th>
+              <th>Change Plan</th>
+            </tr>
+          </thead>
+          <tbody id="adminBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════ UPGRADE MODAL ══════════ -->
+<div class="modal-overlay" id="upModal">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
+      <div></div>
+      <button onclick="closeUp()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);line-height:1">&times;</button>
+    </div>
+    <h2>Upgrade PropScribe</h2>
+    <p>You've reached your monthly limit. Upgrade to keep generating professional listings that win more deals.</p>
+    <div class="plans-grid">
+      <div class="plan-card">
+        <div class="pc-name">Starter</div>
+        <div class="pc-price">&#8358;5,000<span style="font-size:13px;font-weight:400;color:var(--muted)">/mo</span></div>
+        <div class="pc-limit">50 generations/month</div>
+        <div class="pc-desc">Perfect for independent agents listing 2&ndash;3 properties per week</div>
+      </div>
+      <div class="plan-card hot">
+        <div class="pc-name">Pro &mdash; Most Popular</div>
+        <div class="pc-price">&#8358;12,000<span style="font-size:13px;font-weight:400;color:var(--muted)">/mo</span></div>
+        <div class="pc-limit">200 generations/month</div>
+        <div class="pc-desc">Serious agents. Full platform coverage every listing.</div>
+      </div>
+      <div class="plan-card">
+        <div class="pc-name">Agency</div>
+        <div class="pc-price">&#8358;25,000<span style="font-size:13px;font-weight:400;color:var(--muted)">/mo</span></div>
+        <div class="pc-limit">999 generations/month</div>
+        <div class="pc-desc">Teams and large agencies. Maximum volume.</div>
+      </div>
+    </div>
+    <p class="modal-note">To upgrade, send payment proof to your PropScribe admin and your plan will be activated within 24 hours.</p>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var token=localStorage.getItem('ps_token'),cUser=null,cUsage=null,tone='Professional',gCount=0,t0=null;
+
+window.addEventListener('DOMContentLoaded',function(){if(token)loadMe();else showScreen('authScreen')});
+
+async function loadMe(){
+  try{
+    var r=await api('/api/auth/me');
+    if(r.error){logout();return}
+    cUser=r.user;cUsage=r.usage;
+    showScreen('appScreen');renderUI();loadTpls();
+    if(cUser.is_admin)addAdminTab();
+  }catch(e){logout()}
+}
+
+function showScreen(n){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active')});
+  document.getElementById(n).classList.add('active');
+}
+
+function switchTab(t){
+  document.querySelectorAll('.auth-tab').forEach(function(b,i){
+    b.classList.toggle('active',(i===0&&t==='login')||(i===1&&t==='register'));
+  });
+  document.getElementById('loginForm').classList.toggle('hidden',t!=='login');
+  document.getElementById('registerForm').classList.toggle('hidden',t!=='register');
+  var h2=document.querySelector('.auth-form-wrap h2');
+  var sub=document.querySelector('.auth-form-wrap .sub');
+  if(t==='login'){h2.textContent='Welcome Back';sub.textContent='Sign in to your PropScribe account';}
+  else{h2.textContent='Get Started Free';sub.textContent='Create your account in 30 seconds';}
+}
+
+async function login(){
+  var e=document.getElementById('loginEmail').value.trim(),p=document.getElementById('loginPassword').value;
+  var err=document.getElementById('loginError'),btn=document.getElementById('loginBtn');
+  err.style.display='none';
+  if(!e||!p){showErr(err,'Enter your email and password');return}
+  btn.disabled=true;btn.childNodes[0].textContent='Signing in... ';
+  var r=await apiNA('/api/auth/login',{method:'POST',body:{email:e,password:p}});
+  btn.disabled=false;btn.childNodes[0].textContent='Sign In ';
+  if(r.error){showErr(err,r.error);return}
+  token=r.token;cUser=r.user;localStorage.setItem('ps_token',token);await loadMe();
+}
+
+async function register(){
+  var n=document.getElementById('regName').value.trim(),e=document.getElementById('regEmail').value.trim(),p=document.getElementById('regPassword').value;
+  var err=document.getElementById('registerError'),btn=document.getElementById('registerBtn');
+  err.style.display='none';
+  if(!n||!e||!p){showErr(err,'All fields are required');return}
+  btn.disabled=true;btn.childNodes[0].textContent='Creating account... ';
+  var r=await apiNA('/api/auth/register',{method:'POST',body:{name:n,email:e,password:p}});
+  btn.disabled=false;btn.childNodes[0].textContent='Create Free Account ';
+  if(r.error){showErr(err,r.error);return}
+  token=r.token;cUser=r.user;localStorage.setItem('ps_token',token);await loadMe();
+  toast('Welcome to PropScribe!','success');
+}
+
+function logout(){token=null;cUser=null;localStorage.removeItem('ps_token');showScreen('authScreen');}
+function showErr(el,m){el.textContent=m;el.style.display='block';}
+
+function renderUI(){
+  if(!cUser)return;
+  document.getElementById('userName').textContent=cUser.name.split(' ')[0];
+  document.getElementById('userAvatar').textContent=cUser.name.charAt(0).toUpperCase();
+  if(cUsage){
+    var p=Math.min(100,(cUsage.used/cUsage.limit)*100);
+    document.getElementById('usageFill').style.width=p+'%';
+    document.getElementById('usageFill').style.background=p>85?'#ef4444':p>60?'#f59e0b':'var(--lime)';
+    document.getElementById('usageText').textContent=cUsage.used+'/'+cUsage.limit;
+  }
+  var ub=document.getElementById('upgradeBtn');
+  if(cUser.plan==='agency')ub.style.display='none';
+  if(cUser.is_admin){ub.querySelector('span')&&(ub.querySelector('span').textContent='Admin');ub.onclick=function(){showPage('admin');loadAdmin()};}
+}
+
+function addAdminTab(){
+  var c=document.querySelector('.nav-center');
+  if(document.getElementById('tab-admin'))return;
+  var b=document.createElement('button');b.className='ntab';b.id='tab-admin';
+  b.innerHTML='<svg width="14" height="14" color="currentColor"><use href="#icon-admin"/></svg> Admin';
+  b.onclick=function(){showPage('admin');loadAdmin();};
+  c.appendChild(b);
+}
+
+function showPage(n){
+  document.querySelectorAll('.app-page').forEach(function(p){p.classList.remove('active')});
+  document.querySelectorAll('.ntab').forEach(function(t){t.classList.remove('active')});
+  document.getElementById('page-'+n).classList.add('active');
+  var t=document.getElementById('tab-'+n);if(t)t.classList.add('active');
+  if(n==='history')loadHist();
+  if(n==='templates')renderTpls();
+}
+
+async function generate(){
+  var pt=document.getElementById('propType').value,lt=document.getElementById('listingType').value,loc=document.getElementById('location').value.trim(),pr=document.getElementById('price').value.trim();
+  if(!pt){toast('Please select a property type','error');return}
+  if(!lt){toast('Please select a listing type','error');return}
+  if(!loc){toast('Please enter a location','error');return}
+  if(!pr){toast('Please enter a price','error');return}
+  var plats=[];
+  document.querySelectorAll('.plat').forEach(function(l){
+    if(!l.querySelector('input').checked)return;
+    var tx=l.textContent.trim();
+    if(tx.includes('WhatsApp'))plats.push('WhatsApp');
+    else if(tx.includes('Instagram'))plats.push('Instagram');
+    else if(tx.includes('Facebook'))plats.push('Facebook');
+    else if(tx.includes('Twitter'))plats.push('Twitter');
+    else if(tx.includes('LinkedIn'))plats.push('LinkedIn');
+  });
+  if(!plats.length){toast('Please select at least one platform','error');return}
+  var feats=[];
+  document.querySelectorAll('#featGrid input:checked').forEach(function(c){feats.push(c.value);});
+  var sz=document.getElementById('size').value.trim(),ex=document.getElementById('extraDetails').value.trim();
+  var btn=document.getElementById('genBtn');
+  btn.disabled=true;btn.classList.add('loading');btn.querySelector('.btxt').textContent='Writing your listings...';
+  document.getElementById('emptyState').style.display='none';
+  document.getElementById('resultsContainer').innerHTML='';
+  t0=Date.now();
+  var r=await api('/api/generate',{method:'POST',body:{propType:pt,listingType:lt,location:loc,price:pr,size:sz,features:feats,extra:ex,tone:tone,platforms:plats}});
+  btn.disabled=false;btn.classList.remove('loading');btn.querySelector('.btxt').textContent='Generate Listings';
+  if(r.error){if(r.upgrade)openUpgrade();else toast(r.error,'error');document.getElementById('emptyState').style.display='block';return}
+  if(r.usage){cUsage=r.usage;renderUI();}
+  if(!r.content){toast('No content returned from AI. Check your Groq API key in .env','error');document.getElementById('emptyState').style.display='block';console.error('No content in response:',r);return;}
+  var parsed=parseC(r.content,plats);
+  console.log('Parsed sections:',Object.keys(parsed));
+  renderR(parsed);gCount++;
+  var elapsed=((Date.now()-t0)/1000).toFixed(1),wds=r.content.split(/s+/).filter(Boolean).length;
+  var sb=document.getElementById('statsBar');sb.classList.add('show');
+  document.getElementById('stot').textContent=gCount;
+  document.getElementById('splat').textContent=plats.length;
+  document.getElementById('stime').textContent=Math.round(plats.length*18)+'m';
+  document.getElementById('swords').textContent=wds;
+  toast('Generated '+(plats.length+2)+' listings in '+elapsed+'s','success');
+}
+
+function parseC(text,plats){
+  var s={};
+  var keys=['FULL LISTING','WHATSAPP','INSTAGRAM','FACEBOOK','TWITTER','LINKEDIN','HEADLINES'];
+  var map={'FULL LISTING':'listing','WHATSAPP':'whatsapp','INSTAGRAM':'instagram','FACEBOOK':'facebook','TWITTER':'twitter','LINKEDIN':'linkedin','HEADLINES':'headlines'};
+  // Split by section headers instead of regex to avoid escape issues
+  for(var i=0;i<keys.length;i++){
+    var header='['+keys[i]+']';
+    var idx=text.toUpperCase().indexOf(header);
+    if(idx===-1)continue;
+    var start=idx+header.length;
+    // Find next section header
+    var end=text.length;
+    for(var j=0;j<keys.length;j++){
+      if(j===i)continue;
+      var nextIdx=text.toUpperCase().indexOf('['+keys[j]+']',start);
+      if(nextIdx>-1&&nextIdx<end)end=nextIdx;
+    }
+    s[map[keys[i]]]=text.slice(start,end).trim();
+  }
+  return s;
+}
+
+var rcIconMap={listing:'icon-compose',whatsapp:'icon-wa',instagram:'icon-ig',facebook:'icon-fb',twitter:'icon-tw',linkedin:'icon-ln',headlines:'icon-generate'};
+
+var rcLabelMap={listing:'Full Property Listing',whatsapp:'WhatsApp Message',instagram:'Instagram Caption',facebook:'Facebook Post',twitter:'Twitter Post',linkedin:'LinkedIn Post',headlines:'Headline Options'};
+
+function renderR(p){
+  var c=document.getElementById('resultsContainer');c.innerHTML='';
+  document.getElementById('emptyState').style.display='none';
+  var badges={listing:'rb-main',whatsapp:'rb-wa',instagram:'rb-ig',facebook:'rb-fb',twitter:'rb-tw',linkedin:'rb-ln',headlines:'rb-main'};
+  var labels={listing:'Full Property Listing',whatsapp:'WhatsApp Message',instagram:'Instagram Caption',facebook:'Facebook Post',twitter:'Twitter Post',linkedin:'LinkedIn Post',headlines:'Headline Options'};
+  var ord=['listing','whatsapp','instagram','facebook','twitter','linkedin','headlines'];
+  var d=0;
+  ord.forEach(function(k){
+    if(!p[k])return;
+    var w=p[k].split(/\s+/).filter(Boolean).length;
+    var div=document.createElement('div');
+    div.className='result-card';
+    div.style.animationDelay=d+'ms';
+    var badge=badges[k]||'rb-l';
+    var label=labels[k]||k;
+    var isSerif=(k==='listing');
+    div.innerHTML=
+      '<div class="rc-head">'+
+        '<div class="rc-label">'+
+          '<span class="rc-badge '+badge+'">'+k.toUpperCase()+'</span>'+
+          '<span class="rc-title">'+label+'</span>'+
+        '</div>'+
+        '<div class="rc-actions">'+
+          '<button class="btn-redo" onclick="redoS(this,\''+k+'\')">Redo</button>'+
+          '<button class="btn-copy" onclick="cpR(this)">Copy</button>'+
+        '</div>'+
+      '</div>'+
+      '<div class="rc-content'+(isSerif?' serif':'')+'" data-k="'+k+'">'+escH(p[k])+'</div>'+
+      '<div class="rc-footer">'+w+' words</div>';
+    c.appendChild(div);d+=60;
+  });
+}
+
+function cpR(btn){
+  var txt=btn.closest('.result-card').querySelector('.rc-content').textContent;
+  navigator.clipboard.writeText(txt).then(function(){
+    btn.classList.add('done');
+    btn.innerHTML='<svg width="13" height="13" color="white"><use href="#icon-check"/></svg> Copied';
+    setTimeout(function(){btn.classList.remove('done');btn.innerHTML='<svg width="13" height="13" color="currentColor"><use href="#icon-copy"/></svg> Copy';},2000);
+  });
+}
+
+async function redoS(btn,k){
+  var card=btn.closest('.result-card'),el=card.querySelector('.rc-content'),orig=el.textContent;
+  btn.innerHTML='<svg width="13" height="13" color="currentColor"><use href="#icon-redo"/></svg> ...';btn.disabled=true;
+  var pm={wa:'WhatsApp',ig:'Instagram',fb:'Facebook',tw:'Twitter',ln:'LinkedIn'};var plat=pm[k]||'WhatsApp';
+  var r=await api('/api/generate',{method:'POST',body:{propType:document.getElementById('propType').value,listingType:document.getElementById('listingType').value,location:document.getElementById('location').value.trim(),price:document.getElementById('price').value.trim(),size:document.getElementById('size').value.trim(),extra:document.getElementById('extraDetails').value.trim(),features:[],tone:tone,platforms:[plat]}});
+  if(r.error){toast(r.error,'error');el.textContent=orig;}
+  else{var p=parseC(r.content,[plat]);el.textContent=p[k]||p.whatsapp||p.listing||orig;toast('Rewritten!','success');}
+  btn.innerHTML='<svg width="13" height="13" color="currentColor"><use href="#icon-redo"/></svg> Redo';btn.disabled=false;
+}
+
+function tFeat(l){var c=l.querySelector('input');c.checked=!c.checked;l.classList.toggle('on',c.checked);var ck=l.querySelector('.feat-check');if(c.checked){ck.innerHTML='<svg width="11" height="11"><use href="#icon-check"/></svg>';ck.style.background='var(--leaf)';ck.style.borderColor='var(--leaf)';}else{ck.innerHTML='';ck.style.background='';ck.style.borderColor='';}}
+function sTone(btn,t){document.querySelectorAll('.tone-btn').forEach(function(b){b.classList.remove('on');});btn.classList.add('on');tone=t;}
+function tPlat(l){var c=l.querySelector('input');c.checked=!c.checked;l.classList.toggle('on',c.checked);}
+
+function loadTpls(){
+  if(!localStorage.getItem('ps_tpls'))localStorage.setItem('ps_tpls',JSON.stringify([{name:'Real Estate Intro',body:'Hi {{name}}!\n\nI am reaching out about an exciting property opportunity. Would you be available for a quick call this week?\n\nBest regards,\nBilly',image:null},{name:'Follow Up',body:'Hi {{name}}, just following up on my previous message. Looking forward to hearing from you!',image:null}]));
+  popTplSel();
+}
+
+function popTplSel(){
+  var s=JSON.parse(localStorage.getItem('ps_tpls')||'[]');
+  var el=document.getElementById('templateSelect');if(!el)return;
+  el.innerHTML='<option value="">Custom message</option>';
+  s.forEach(function(t,i){el.innerHTML+='<option value="'+i+'">'+t.name+'</option>';});
+}
+
+function loadTemplate(){var idx=document.getElementById('templateSelect').value;if(idx==='')return;toast('Template loaded','info');}
+
+function renderTpls(){
+  var s=JSON.parse(localStorage.getItem('ps_tpls')||'[]');
+  var c=document.getElementById('tplList');if(!c)return;
+  if(!s.length){c.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted)"><svg width="36" height="36" color="var(--muted)" style="margin-bottom:12px;opacity:0.4"><use href="#icon-templates"/></svg><br>No templates yet</div>';return;}
+  c.innerHTML=s.map(function(t,i){
+    return '<div class="tpl-card">'+
+      '<div class="tpl-thumb">'+(t.image?'<img src="'+t.image+'">':(
+        '<svg width="20" height="20" color="var(--muted)"><use href="#icon-compose"/></svg>'
+      ))+'</div>'+
+      '<div class="tpl-info">'+
+        '<div class="tpl-name">'+escH(t.name)+'</div>'+
+        '<div class="tpl-meta">'+(t.image?'Has media attachment':'Text only')+'</div>'+
+        '<div class="tpl-preview">'+escH((t.body||'').substring(0,80))+(t.body&&t.body.length>80?'...':'')+'</div>'+
+      '</div>'+
+      '<div class="tpl-actions">'+
+        '<button class="btn btn-ghost btn-sm" onclick="delTpl('+i+')">'+
+          '<svg width="13" height="13" color="currentColor"><use href="#icon-trash"/></svg>'+
+        '</button>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+function showAddTpl(){document.getElementById('addTplForm').style.display='block';}
+function saveTpl(){
+  var n=document.getElementById('tplName').value.trim();
+  if(!n){toast('Enter a template name','error');return;}
+  var s=JSON.parse(localStorage.getItem('ps_tpls')||'[]');
+  s.push({name:n,body:document.getElementById('tplBody').value.trim(),image:window._tM||null,imageName:window._tMN||null});
+  localStorage.setItem('ps_tpls',JSON.stringify(s));cancelTpl();renderTpls();popTplSel();toast('Template saved!','success');
+}
+function cancelTpl(){document.getElementById('tplName').value='';document.getElementById('tplBody').value='';document.getElementById('addTplForm').style.display='none';clearTplM(null);}
+function delTpl(i){var s=JSON.parse(localStorage.getItem('ps_tpls')||'[]');s.splice(i,1);localStorage.setItem('ps_tpls',JSON.stringify(s));renderTpls();popTplSel();toast('Deleted','info');}
+function handleTplM(ev){var f=ev.target.files[0];if(!f)return;if(f.size>64*1024*1024){toast('File too large (max 64MB)','error');return;}var r=new FileReader();r.onload=function(e){window._tM=e.target.result;window._tMN=f.name;document.getElementById('tplMThumb').src=f.type.startsWith('video/')?'':e.target.result;document.getElementById('tplMName').textContent=f.name;document.getElementById('tplMPH').style.display='none';document.getElementById('tplMLD').style.display='flex';};r.readAsDataURL(f);}
+function clearTplM(ev){if(ev)ev.stopPropagation();window._tM=null;window._tMN=null;document.getElementById('tplMThumb').src='';document.getElementById('tplMPH').style.display='flex';document.getElementById('tplMLD').style.display='none';document.getElementById('tplMedia').value='';}
+
+async function loadHist(){
+  var c=document.getElementById('histList'),s=document.getElementById('histStats');if(!c)return;
+  if(s)s.innerHTML='<div class="stat-card"><div class="stat-n">0</div><div class="stat-l">Campaigns</div></div><div class="stat-card"><div class="stat-n">0</div><div class="stat-l">Listings Made</div></div><div class="stat-card"><div class="stat-n">'+(cUsage?cUsage.used:0)+'</div><div class="stat-l">This Month</div></div>';
+  c.innerHTML='<div style="text-align:center;padding:48px;color:var(--muted)"><svg width="36" height="36" color="var(--muted)" style="margin-bottom:12px;opacity:0.4"><use href="#icon-history"/></svg><br><br>No history yet &mdash; generate your first listing!</div>';
+}
+function clearHist(){toast('History cleared','info');}
+
+async function loadAdmin(){
+  var st=await api('/api/admin/stats'),us=await api('/api/admin/users');
+  var sa=document.getElementById('adminStats');
+  if(sa)sa.innerHTML='<div class="stat-card"><div class="stat-n">'+(st.total_users||0)+'</div><div class="stat-l">Total Users</div></div><div class="stat-card"><div class="stat-n">'+(st.paid_users||0)+'</div><div class="stat-l">Paid Users</div></div><div class="stat-card"><div class="stat-n">'+(st.total_generations||0)+'</div><div class="stat-l">Generations</div></div>';
+  var pc={free:'pb-free',starter:'pb-starter',pro:'pb-pro',agency:'pb-agency'};
+  document.getElementById('adminBody').innerHTML=(us||[]).map(function(u){
+    return '<tr><td><div style="font-weight:600">'+escH(u.name||'&mdash;')+'</div><div style="font-size:11px;color:var(--muted);font-family:var(--mono)">'+escH(u.email)+'</div></td><td><span class="plan-badge '+(pc[u.plan]||'pb-free')+'">'+u.plan+'</span></td><td>'+((u.total_gens)||0)+'</td><td style="font-size:11px;font-family:var(--mono)">'+(((u.created_at||'').split(' ')[0])||'&mdash;')+'</td><td style="font-size:11px;font-family:var(--mono)">'+(u.last_login?u.last_login.split(' ')[0]:'Never')+'</td><td><select class="plan-sel" onchange="setP('+u.id+',this.value)">'+['free','starter','pro','agency'].map(function(p){return'<option value="'+p+'"'+(u.plan===p?' selected':'')+'>'+p+'</option>';}).join('')+'</select></td></tr>';
+  }).join('');
+}
+
+async function setP(uid,plan){var r=await api('/api/admin/set-plan',{method:'POST',body:{userId:uid,plan:plan}});if(r.success)toast('Plan updated!','success');else toast(r.error||'Failed','error');}
+
+function openUpgrade(){document.getElementById('upModal').classList.add('open');}
+function closeUp(){document.getElementById('upModal').classList.remove('open');}
+document.getElementById('upModal').addEventListener('click',function(e){if(e.target.id==='upModal')closeUp();});
+
+async function api(path,opts){
+  try{var r=await fetch(path,{method:opts&&opts.method||'GET',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:opts&&opts.body?JSON.stringify(opts.body):undefined});return r.json();}
+  catch(e){return{error:'Network error: '+e.message};}
+}
+async function apiNA(path,opts){
+  try{var r=await fetch(path,{method:opts&&opts.method||'GET',headers:{'Content-Type':'application/json'},body:opts&&opts.body?JSON.stringify(opts.body):undefined});return r.json();}
+  catch(e){return{error:'Network error: '+e.message};}
+}
+
+function toast(m,t){var el=document.getElementById('toast');el.textContent=m;el.className='toast show '+(t||'info');clearTimeout(window._tt);window._tt=setTimeout(function(){el.classList.remove('show');},3500);}
+function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+</script>
+</body>
+</html>
